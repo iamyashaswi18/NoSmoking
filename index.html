@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Smoke Free Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c0c 0%, #1a0a0a 50%, #0d1a0d 100%);
+    font-family: Georgia, serif;
+    color: #e8d5b0;
+    overflow-y: auto;
+  }
+  .header {
+    text-align: center;
+    padding: 36px 20px 20px;
+    border-bottom: 1px solid rgba(232,213,176,0.1);
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: normal;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #f0c060;
+    margin: 6px 0 0;
+  }
+  .header p { font-size: 11px; opacity: 0.4; letter-spacing: 2px; margin-top: 4px; }
+  .container { max-width: 420px; margin: 0 auto; padding: 24px 20px 40px; }
+  .card-total {
+    background: linear-gradient(135deg, rgba(240,192,96,0.12), rgba(100,200,100,0.08));
+    border: 1px solid rgba(240,192,96,0.3);
+    border-radius: 18px;
+    padding: 28px 20px;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .card-total .label { font-size: 11px; letter-spacing: 3px; opacity: 0.5; margin-bottom: 10px; }
+  .card-total .amount {
+    font-size: 52px;
+    font-weight: bold;
+    color: #7ed87e;
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(126,216,126,0.35);
+  }
+  .card-total .sub { font-size: 12px; opacity: 0.35; margin-top: 8px; }
+  .card-tick {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(240,192,96,0.25);
+    border-radius: 14px;
+    padding: 22px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .card-tick .date-label { font-size: 11px; letter-spacing: 2px; opacity: 0.45; margin-bottom: 5px; }
+  .card-tick .date-val { font-size: 16px; color: #f0c060; margin-bottom: 4px; }
+  .card-tick .day-amt { font-size: 22px; font-weight: bold; color: #e8d5b0; }
+  .card-tick .day-type { font-size: 11px; opacity: 0.35; margin-top: 3px; }
+  .tick-btn {
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    border: 2px solid rgba(232,213,176,0.3);
+    background: transparent;
+    color: rgba(232,213,176,0.4);
+    font-size: 26px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .tick-btn:hover {
+    border-color: #7ed87e;
+    color: #7ed87e;
+    background: rgba(126,216,126,0.1);
+  }
+  .log-section { margin-bottom: 22px; }
+  .log-section .sec-label { font-size: 10px; letter-spacing: 3px; opacity: 0.35; margin-bottom: 10px; text-align: center; }
+  .log-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(126,216,126,0.12);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .log-row .left { display: flex; align-items: center; gap: 10px; }
+  .log-row .tick-icon { color: #7ed87e; font-size: 14px; }
+  .log-row .log-date { opacity: 0.65; }
+  .log-row .log-amt { color: #f0c060; }
+  .more-label { text-align: center; font-size: 11px; opacity: 0.3; margin-top: 4px; }
+  .proj-section { margin-bottom: 8px; }
+  .proj-section .sec-label { font-size: 10px; letter-spacing: 3px; opacity: 0.35; margin-bottom: 12px; text-align: center; }
+  .proj-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(232,213,176,0.07);
+    border-radius: 10px;
+    margin-bottom: 7px;
+  }
+  .proj-left { display: flex; align-items: center; gap: 10px; font-size: 13px; opacity: 0.6; letter-spacing: 1px; }
+  .proj-val { font-size: 18px; color: #f0c060; font-weight: bold; }
+  .footer { text-align: center; margin-top: 28px; font-size: 12px; opacity: 0.25; letter-spacing: 1px; line-height: 1.8; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="font-size:36px;margin-bottom:6px">🚭</div>
+  <h1>Smoke Free</h1>
+  <p>SINCE 25 MAY 2026</p>
+</div>
+
+<div class="container">
+  <div class="card-total">
+    <div class="label">TOTAL SAVED</div>
+    <div class="amount" id="totalAmt">₹0</div>
+    <div class="sub" id="streakLabel">0 days logged 🔥</div>
+  </div>
+
+  <div class="card-tick">
+    <div>
+      <div class="date-label">TODAY'S DATE</div>
+      <div class="date-val" id="currentDate">—</div>
+      <div class="day-amt" id="dayAmt">—</div>
+      <div class="day-type" id="dayType">—</div>
+    </div>
+    <button class="tick-btn" onclick="handleTick()">○</button>
+  </div>
+
+  <div class="log-section" id="logSection" style="display:none">
+    <div class="sec-label">RECENT LOG</div>
+    <div id="logRows"></div>
+    <div class="more-label" id="moreLabel"></div>
+  </div>
+
+  <div class="proj-section">
+    <div class="sec-label">IF YOU STAY SMOKE FREE</div>
+    <div class="proj-row"><div class="proj-left"><span>🌱</span><span>5 Years</span></div><div class="proj-val" id="p5">—</div></div>
+    <div class="proj-row"><div class="proj-left"><span>🌳</span><span>10 Years</span></div><div class="proj-val" id="p10">—</div></div>
+    <div class="proj-row"><div class="proj-left"><span>🏠</span><span>20 Years</span></div><div class="proj-val" id="p20">—</div></div>
+  </div>
+
+  <div class="footer">Every tick is money in your pocket.<br/>Every day is a win.</div>
+</div>
+
+<script>
+  const QUIT_DATE = "2026-05-25";
+  const TICKS_KEY = "sf_ticks_v2";
+  const COST_PER_STICK = 400 / 20;
+
+  function getDailyAmount(dateStr) {
+    const day = new Date(dateStr).getDay();
+    const sticks = (day === 0 || day === 6) ? 7.5 : 5.5;
+    return Math.round(sticks * COST_PER_STICK);
+  }
+
+  function addDays(dateStr, n) {
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function formatINR(val) {
+    if (val >= 10000000) return "₹" + (val / 10000000).toFixed(2) + " Cr";
+    if (val >= 100000) return "₹" + (val / 100000).toFixed(2) + " L";
+    return "₹" + val.toLocaleString("en-IN");
+  }
+
+  function formatDisplay(dateStr) {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric", month: "short", year: "numeric", weekday: "short"
+    });
+  }
+
+  function getProjection(years) {
+    let total = 0;
+    const d = new Date();
+    const end = new Date();
+    end.setFullYear(end.getFullYear() + years);
+    while (d <= end) {
+      const day = d.getDay();
+      total += Math.round(((day === 0 || day === 6) ? 7.5 : 5.5) * COST_PER_STICK);
+      d.setDate(d.getDate() + 1);
+    }
+    return total;
+  }
+
+  function loadTicks() {
+    try { return JSON.parse(localStorage.getItem(TICKS_KEY)) || []; } catch { return []; }
+  }
+
+  function saveTicks(t) { localStorage.setItem(TICKS_KEY, JSON.stringify(t)); }
+
+  function render() {
+    const ticks = loadTicks();
+    const currentDate = addDays(QUIT_DATE, ticks.length);
+    const todayAmt = getDailyAmount(currentDate);
+    const totalSaved = ticks.reduce((a, b) => a + b, 0);
+    const dayObj = new Date(currentDate);
+    const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
+
+    document.getElementById("totalAmt").textContent = formatINR(totalSaved);
+    document.getElementById("streakLabel").textContent = ticks.length + " day" + (ticks.length !== 1 ? "s" : "") + " logged 🔥";
+    document.getElementById("currentDate").textContent = formatDisplay(currentDate);
+    document.getElementById("dayAmt").textContent = "₹" + todayAmt;
+    document.getElementById("dayType").textContent = isWeekend ? "Weekend (7.5 sticks)" : "Weekday (5.5 sticks)";
+
+    // Log
+    if (ticks.length > 0) {
+      document.getElementById("logSection").style.display = "block";
+      const rows = [...ticks].reverse().slice(0, 5);
+      document.getElementById("logRows").innerHTML = rows.map((amt, i) => {
+        const ds = addDays(QUIT_DATE, ticks.length - 1 - i);
+        return `<div class="log-row">
+          <div class="left"><span class="tick-icon">✓</span><span class="log-date">${formatDisplay(ds)}</span></div>
+          <span class="log-amt">₹${amt}</span>
+        </div>`;
+      }).join("");
+      document.getElementById("moreLabel").textContent = ticks.length > 5 ? "+" + (ticks.length - 5) + " more days logged" : "";
+    }
+
+    document.getElementById("p5").textContent = formatINR(getProjection(5));
+    document.getElementById("p10").textContent = formatINR(getProjection(10));
+    document.getElementById("p20").textContent = formatINR(getProjection(20));
+  }
+
+  function handleTick() {
+    const ticks = loadTicks();
+    const currentDate = addDays(QUIT_DATE, ticks.length);
+    ticks.push(getDailyAmount(currentDate));
+    saveTicks(ticks);
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>
