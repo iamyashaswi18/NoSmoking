@@ -1,0 +1,216 @@
+import { useState, useEffect } from "react";
+
+const PACK_COST = 400;
+const PACK_SIZE = 20;
+const COST_PER_STICK = PACK_COST / PACK_SIZE;
+const QUIT_DATE = "2026-05-25";
+const TICKS_KEY = "sf_ticks_v2";
+
+function getDailyAmount(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+  const sticks = day === 0 || day === 6 ? 7.5 : 5.5;
+  return Math.round(sticks * COST_PER_STICK);
+}
+
+function addDays(dateStr, n) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+function formatINR(val) {
+  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+  if (val >= 100000) return `₹${(val / 100000).toFixed(2)} L`;
+  return `₹${val.toLocaleString("en-IN")}`;
+}
+
+function formatDisplay(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", weekday: "short" });
+}
+
+function getProjection(years) {
+  let total = 0;
+  const start = new Date();
+  const end = new Date();
+  end.setFullYear(end.getFullYear() + years);
+  const d = new Date(start);
+  while (d <= end) {
+    const day = d.getDay();
+    const sticks = day === 0 || day === 6 ? 7.5 : 5.5;
+    total += Math.round(sticks * COST_PER_STICK);
+    d.setDate(d.getDate() + 1);
+  }
+  return total;
+}
+
+export default function App() {
+  const [ticks, setTicks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(TICKS_KEY)) || []; } catch { return []; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(TICKS_KEY, JSON.stringify(ticks));
+  }, [ticks]);
+
+  // current active date = quit date + number of ticks done
+  const currentDate = addDays(QUIT_DATE, ticks.length);
+  const totalSaved = ticks.reduce((a, b) => a + b, 0);
+  const todayAmount = getDailyAmount(currentDate);
+  const streak = ticks.length;
+
+  function handleTick() {
+    setTicks(prev => [...prev, todayAmount]);
+  }
+
+  const proj5 = getProjection(5);
+  const proj10 = getProjection(10);
+  const proj20 = getProjection(20);
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0f0c0c 0%, #1a0a0a 50%, #0d1a0d 100%)",
+      fontFamily: "'Georgia', serif",
+      color: "#e8d5b0",
+      overflowY: "auto"
+    }}>
+      {/* Header */}
+      <div style={{ textAlign: "center", padding: "36px 20px 20px", borderBottom: "1px solid rgba(232,213,176,0.1)" }}>
+        <div style={{ fontSize: 36, marginBottom: 6 }}>🚭</div>
+        <h1 style={{ margin: 0, fontSize: 26, fontWeight: "normal", letterSpacing: 4, textTransform: "uppercase", color: "#f0c060" }}>
+          Smoke Free
+        </h1>
+        <p style={{ margin: "4px 0 0", fontSize: 11, opacity: 0.4, letterSpacing: 2 }}>SINCE 25 MAY 2026</p>
+      </div>
+
+      <div style={{ maxWidth: 420, margin: "0 auto", padding: "24px 20px 40px" }}>
+
+        {/* Total Saved — BIG */}
+        <div style={{
+          background: "linear-gradient(135deg, rgba(240,192,96,0.12), rgba(100,200,100,0.08))",
+          border: "1px solid rgba(240,192,96,0.3)",
+          borderRadius: 18,
+          padding: "28px 20px",
+          textAlign: "center",
+          marginBottom: 18
+        }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, opacity: 0.5, marginBottom: 10 }}>TOTAL SAVED</div>
+          <div style={{
+            fontSize: 52,
+            fontWeight: "bold",
+            color: "#7ed87e",
+            lineHeight: 1,
+            textShadow: "0 0 30px rgba(126,216,126,0.35)"
+          }}>{formatINR(totalSaved)}</div>
+          <div style={{ fontSize: 12, opacity: 0.35, marginTop: 8 }}>{streak} day{streak !== 1 ? "s" : ""} logged 🔥</div>
+        </div>
+
+        {/* Active Tick Box */}
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(240,192,96,0.25)",
+          borderRadius: 14,
+          padding: "22px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 20
+        }}>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: 2, opacity: 0.45, marginBottom: 5 }}>TODAY'S DATE</div>
+            <div style={{ fontSize: 16, color: "#f0c060", marginBottom: 4 }}>{formatDisplay(currentDate)}</div>
+            <div style={{ fontSize: 22, fontWeight: "bold", color: "#e8d5b0" }}>₹{todayAmount}</div>
+            <div style={{ fontSize: 11, opacity: 0.35, marginTop: 3 }}>
+              {new Date(currentDate).getDay() === 0 || new Date(currentDate).getDay() === 6 ? "Weekend (7.5 sticks)" : "Weekday (5.5 sticks)"}
+            </div>
+          </div>
+          <button
+            onClick={handleTick}
+            style={{
+              width: 62,
+              height: 62,
+              borderRadius: "50%",
+              border: "2px solid rgba(232,213,176,0.3)",
+              background: "transparent",
+              color: "rgba(232,213,176,0.4)",
+              fontSize: 26,
+              cursor: "pointer",
+              transition: "all 0.15s",
+              flexShrink: 0
+            }}
+            onMouseOver={e => { e.currentTarget.style.borderColor = "#7ed87e"; e.currentTarget.style.color = "#7ed87e"; e.currentTarget.style.background = "rgba(126,216,126,0.1)"; }}
+            onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(232,213,176,0.3)"; e.currentTarget.style.color = "rgba(232,213,176,0.4)"; e.currentTarget.style.background = "transparent"; }}
+          >
+            ○
+          </button>
+        </div>
+
+        {/* Past ticks log — last 5 */}
+        {ticks.length > 0 && (
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ fontSize: 10, letterSpacing: 3, opacity: 0.35, marginBottom: 10, textAlign: "center" }}>RECENT LOG</div>
+            {[...ticks].reverse().slice(0, 5).map((amt, i) => {
+              const dateStr = addDays(QUIT_DATE, ticks.length - 1 - i);
+              return (
+                <div key={i} style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "10px 14px",
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(126,216,126,0.12)",
+                  borderRadius: 8,
+                  marginBottom: 6
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ color: "#7ed87e", fontSize: 14 }}>✓</span>
+                    <span style={{ fontSize: 13, opacity: 0.65 }}>{formatDisplay(dateStr)}</span>
+                  </div>
+                  <span style={{ color: "#f0c060", fontSize: 13 }}>₹{amt}</span>
+                </div>
+              );
+            })}
+            {ticks.length > 5 && (
+              <div style={{ textAlign: "center", fontSize: 11, opacity: 0.3, marginTop: 4 }}>
+                +{ticks.length - 5} more days logged
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Projections */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 10, letterSpacing: 3, opacity: 0.35, marginBottom: 12, textAlign: "center" }}>IF YOU STAY SMOKE FREE</div>
+          {[
+            { label: "5 Years", value: proj5, emoji: "🌱" },
+            { label: "10 Years", value: proj10, emoji: "🌳" },
+            { label: "20 Years", value: proj20, emoji: "🏠" },
+          ].map(({ label, value, emoji }) => (
+            <div key={label} style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "13px 16px",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(232,213,176,0.07)",
+              borderRadius: 10,
+              marginBottom: 7
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>{emoji}</span>
+                <span style={{ fontSize: 13, opacity: 0.6, letterSpacing: 1 }}>{label}</span>
+              </div>
+              <div style={{ fontSize: 18, color: "#f0c060", fontWeight: "bold" }}>{formatINR(value)}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: 28, fontSize: 12, opacity: 0.25, letterSpacing: 1, lineHeight: 1.8 }}>
+          Every tick is money in your pocket.<br />Every day is a win.
+        </div>
+      </div>
+    </div>
+  );
+}
